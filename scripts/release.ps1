@@ -57,9 +57,22 @@ finally {
 
 $publishArgs = @('--access', 'public', '--tag', $Tag)
 if ($DryRun) { $publishArgs += '--dry-run' }
+# Skip versions already on npm, so a release that failed partway can be rerun.
+function Publish-Package([string]$Dir) {
+    $package = Get-Content (Join-Path $Dir 'package.json') -Raw | ConvertFrom-Json
+    $id = "$($package.name)@$($package.version)"
+    $ErrorActionPreference = 'Continue'
+    $existing = npm view $id version 2>$null
+    if ($existing) {
+        Write-Host "$id is already published; skipping"
+        return
+    }
+    Invoke-Checked npm publish $Dir @publishArgs
+}
+
 # Platform packages first, so the main package's optional dependencies resolve.
 foreach ($dir in Get-ChildItem dist/npm -Directory -Filter 'x12-*') {
-    Invoke-Checked npm publish $dir.FullName @publishArgs
+    Publish-Package $dir.FullName
 }
-Invoke-Checked npm publish (Join-Path $root 'dist/npm/edifabric-x12') @publishArgs
+Publish-Package (Join-Path $root 'dist/npm/edifabric-x12')
 if ($DryRun) { Write-Host 'Dry run: nothing was published.' }

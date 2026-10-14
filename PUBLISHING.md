@@ -57,8 +57,9 @@ after the native build for that version is uploaded there.
    version differ. Locally, the equivalent is `./scripts/release.ps1` or `scripts/release.sh`.
 
 The platform packages are published before `edifabric-x12`, so its optional dependencies
-resolve as soon as it appears. npm never accepts the same version twice; if a release fails
-halfway, bump the version and publish all five again.
+resolve as soon as it appears. npm never accepts the same version twice, so the scripts and the
+workflow skip any package whose version is already published; if a release fails halfway, fix
+the cause and run it again to publish the rest.
 
 The local scripts need Node.js 18 or later. Workflow runs from GitHub Actions attach
 [provenance](https://docs.npmjs.com/generating-provenance-statements) to every package.

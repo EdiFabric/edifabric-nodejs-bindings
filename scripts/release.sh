@@ -35,10 +35,21 @@ cp scripts/smoke-test.cjs "$work/"
 
 publish_args=(--access public --tag "$tag")
 [ "$dry_run" = 1 ] && publish_args+=(--dry-run)
+# Skip versions already on npm, so a release that failed partway can be rerun.
+publish() {
+  local id
+  id=$(node -p "const p = require('./$1/package.json'); p.name + '@' + p.version")
+  if [ -n "$(npm view "$id" version 2>/dev/null)" ]; then
+    echo "$id is already published; skipping"
+    return
+  fi
+  npm publish "$1" "${publish_args[@]}"
+}
+
 # Platform packages first, so the main package's optional dependencies resolve.
 for dir in dist/npm/x12-*; do
-  npm publish "$dir" "${publish_args[@]}"
+  publish "$dir"
 done
-npm publish dist/npm/edifabric-x12 "${publish_args[@]}"
+publish dist/npm/edifabric-x12
 [ "$dry_run" = 1 ] && echo "Dry run: nothing was published."
 exit 0

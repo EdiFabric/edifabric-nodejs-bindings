@@ -90,5 +90,14 @@ jobs:
         run: |
           args=(--access public --provenance --tag "$TAG")
           [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
-          for dir in dist/npm/x12-*; do npm publish "$dir" "${args[@]}"; done
-          npm publish dist/npm/edifabric-x12 "${args[@]}"
+          # Skip versions already on npm, so a release that failed partway can be rerun.
+          publish() {
+            id=$(node -p "const p = require('./$1/package.json'); p.name + '@' + p.version")
+            if [ -n "$(npm view "$id" version 2>/dev/null)" ]; then
+              echo "$id is already published; skipping"
+              return
+            fi
+            npm publish "$1" "${args[@]}"
+          }
+          for dir in dist/npm/x12-*; do publish "$dir"; done
+          publish dist/npm/edifabric-x12
