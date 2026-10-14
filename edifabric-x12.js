@@ -113,6 +113,15 @@ function isFile(candidate) {
     }
 }
 
+/** Path of the library in the @edifabric/x12-<platform>-<arch> package npm installed, or null. */
+function bundledLibrary() {
+    try {
+        return require(`@edifabric/x12-${process.platform}-${process.arch}`);
+    } catch {
+        return null;
+    }
+}
+
 function candidates(explicit) {
     const name = libraryFilename();
     const found = [];
@@ -120,6 +129,8 @@ function candidates(explicit) {
     if (explicit) found.push(resolve(path.resolve(explicit)));
     if (process.env.EDIFABRIC_X12_LIB) found.push(resolve(path.resolve(process.env.EDIFABRIC_X12_LIB)));
     found.push(path.join(__dirname, name), path.join(__dirname, '..', name), path.join(process.cwd(), name));
+    const bundled = bundledLibrary();
+    if (bundled) found.push(bundled);
     return found;
 }
 
@@ -166,8 +177,9 @@ function bind(libraryPath) {
  * Load and bind the native library.
  *
  * libraryPath may be the library file or the folder containing it. When omitted, the
- * EDIFABRIC_X12_LIB variable, this module's folder, its parent, and the current
- * working directory are tried in that order. Cached after the first success.
+ * EDIFABRIC_X12_LIB variable, this module's folder, its parent, the current working
+ * directory, and the library bundled in the @edifabric/x12-<platform>-<arch> package
+ * are tried in that order. Cached after the first success.
  *
  * Returns { path, lib, raw }; raw holds the unwrapped C functions by their ABI names.
  */

@@ -14,13 +14,27 @@ Node.js bindings for [ediFabric Native](https://www.edifabric.com/edifabric-nati
 | `edifabric-x12.d.ts` | TypeScript declarations for the bindings |
 | `example_all_functions.js` | runnable walkthrough of every entry point |
 | `c-abi-edifabric_x12_tools.h` | the C header these bindings mirror |
+| `PUBLISHING.md` | how the npm packages are built and published |
+
+## Install
+
+```bash
+npm install edifabric-x12
+```
+
+npm also installs the ediFabric Native library for your platform from one of the
+`@edifabric/x12-<os>-<cpu>` packages, so there is nothing else to download. They are
+published for Windows x64, Linux x64 and arm64 (glibc 2.34 or later), and macOS
+arm64 (12 or later). A library you pass to `loadLibrary(path)`, set in
+`EDIFABRIC_X12_LIB`, or put in the working directory takes precedence over the
+bundled one.
 
 ## Requirements
 
 - Node.js 18 or later
 - [koffi](https://www.npmjs.com/package/koffi), installed with `npm install` (prebuilt, no compiler needed)
 - 64-bit Windows, Linux, or macOS
-- The native library for your platform:
+- The native library for your platform (installed from npm with the package; download it when you run from a clone):
 
 | Platform | File |
 | --- | --- |
@@ -67,7 +81,8 @@ node example_all_functions.js --lib /opt/edifabric   # library file or folder
 You can also set `EDIFABRIC_SERIAL` instead of passing `--serial`.
 
 The library path is resolved from `--lib`, then `EDIFABRIC_X12_LIB`, then the
-module folder, its parent, and the working directory. The serial comes from
+module folder, its parent, the working directory, and the library bundled in the
+`@edifabric/x12-<os>-<cpu>` package. The serial comes from
 `--serial`, then `EDIFABRIC_SERIAL`.
 
 All strings and payloads cross the boundary as **UTF‑8 byte buffers**

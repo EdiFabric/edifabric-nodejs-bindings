@@ -1,0 +1,94 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: npm dist-tag
+        default: next
+      dry-run:
+        description: Validate without publishing
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check the release tag matches the version
+        if: github.event_name == 'release'
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          test "${GITHUB_REF_NAME#v}" = "$version" || { echo "Tag $GITHUB_REF_NAME does not match version $version"; exit 1; }
+      - run: bash scripts/fetch-natives.sh natives
+      - run: node scripts/build-packages.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-packages
+          path: dist/npm
+          if-no-files-found: error
+
+  smoke-test:
+    needs: build
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-packages
+          path: dist/npm
+      - name: Install the packed packages into a scratch project
+        run: |
+          platform="x12-$(node -p process.platform)-$(node -p process.arch)"
+          mkdir "$RUNNER_TEMP/smoke" && cd "$RUNNER_TEMP/smoke"
+          main=$(npm pack --silent "$GITHUB_WORKSPACE/dist/npm/edifabric-x12")
+          native=$(npm pack --silent "$GITHUB_WORKSPACE/dist/npm/$platform")
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund "./$main" "./$native"
+          cp "$GITHUB_WORKSPACE/scripts/smoke-test.cjs" .
+          node smoke-test.cjs
+
+  publish:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@latest
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-packages
+          path: dist/npm
+      - name: Publish the platform packages, then edifabric-x12
+        env:
+          # Leave NPM_TOKEN unset once trusted publishing is configured for every package.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TAG: ${{ github.event_name == 'release' && 'latest' || inputs.tag }}
+          DRY_RUN: ${{ github.event_name != 'release' && inputs.dry-run }}
+        run: |
+          args=(--access public --provenance --tag "$TAG")
+          [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
+          for dir in dist/npm/x12-*; do npm publish "$dir" "${args[@]}"; done
+          npm publish dist/npm/edifabric-x12 "${args[@]}"

@@ -1,6 +1,6 @@
 {
   "name": "edifabric-x12",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Node.js bindings for ediFabric Native X12: convert X12 EDI to JSON and back, validate, and generate acknowledgments.",
   "main": "edifabric-x12.js",
   "types": "edifabric-x12.d.ts",
@@ -10,7 +10,8 @@
     "c-abi-edifabric_x12_tools.h"
   ],
   "scripts": {
-    "example": "node example_all_functions.js"
+    "example": "node example_all_functions.js",
+    "build-packages": "node scripts/build-packages.mjs"
   },
   "engines": {
     "node": ">=18"
@@ -26,9 +27,11 @@
     "json",
     "ffi"
   ],
+  "license": "SEE LICENSE IN LICENSE.md",
+  "author": "EdiFabric <support@edifabric.com>",
   "homepage": "https://www.edifabric.com/edifabric-native.html",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EdiFabric/edifabric-nodejs-bindings.git"
+    "url": "git+https://github.com/EdiFabric/edifabric-nodejs-bindings.git"
   }
 }
