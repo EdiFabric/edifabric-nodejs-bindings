@@ -233,7 +233,7 @@ call `.toString('utf8')` for text.
 | --- | --- | --- |
 | Community | `setSerial` only | `setSerial` |
 | Developer | `setSerial` and `ensureToken` (`ensureToken` caches the result for 1 day) | `ensureToken` |
-| Enterprise | `setSerial`, `ensureToken`, `getToken` / `setToken` | `setToken` (offline tokens) |
+| Enterprise and Perpetual | `setSerial`, `ensureToken`, `getToken` / `setToken` | `setToken` (offline tokens) |
 
 ```js
 // Community: authorize per process against the license server
@@ -246,11 +246,13 @@ console.log(ef.getTokenExpiration());   // .NET UTC ticks as BigInt, 0n when uns
 // Developer (also works): same as Community, online check per process
 ef.setSerial(serial);
 
-// Enterprise (recommended): fetch / validate / set an offline token yourself
+// Enterprise and Perpetual (recommended): fetch / validate / set an offline token yourself
 const token = ef.getToken(serial);
 ef.validateToken(token);
 ef.setToken(token);
 ```
+
+Self-service offline tokens last 30 days, so refresh them before they expire. If your hosts can't refresh a token, Enterprise can request a 1-year token and Perpetual a non-expiring token. Long-lived tokens are issued after the trial or evaluation period to registered companies using professional email addresses, and are non-refundable once issued. See [how to request one](https://www.edifabric.com/docs/faq/pricing-and-licensing-faqs.html#long-lived-tokens). Treat every token as a secret, and keep it out of source control.
 
 ## Model map
 
@@ -430,7 +432,7 @@ the library is older than these bindings; download the current build.
 resets the map, so reload it afterwards.
 
 **Error 628 / 635 on parse** — authorize first: `setSerial` on Community,
-`ensureToken` (or `setSerial`) on Developer, or `setToken` on Enterprise.
+`ensureToken` (or `setSerial`) on Developer, or `setToken` on Enterprise or Perpetual.
 
 **Error 633 on ensureToken / getToken** — the plan's machine quota is used up.
 Contact support.
