@@ -44,7 +44,7 @@ after the native build for that version is uploaded there.
 ## Release
 
 1. Upload the new native build to `https://www.edifabric.com/download/`.
-2. Set `version` in `package.json` to the native library version, for example `1.1.1`, and
+2. Set `version` in `package.json` to the native library version, for example `1.2.0`, and
    commit.
 3. Validate the packages:
    - GitHub: **Actions > Publish to npm > Run workflow** with **dry-run** checked
@@ -52,7 +52,7 @@ after the native build for that version is uploaded there.
 4. Optionally publish a prerelease under the `next` dist-tag: run the workflow with dry-run
    cleared and tag `next`, or `./scripts/release.ps1 -Tag next`, then test it with
    `npm install edifabric-x12@next`.
-5. Create a GitHub release with the tag `v<version>`, for example `v1.1.1`. Publishing the
+5. Create a GitHub release with the tag `v<version>`, for example `v1.2.0`. Publishing the
    release runs the workflow and publishes under `latest`; the workflow fails if the tag and the
    version differ. Locally, the equivalent is `./scripts/release.ps1` or `scripts/release.sh`.
 

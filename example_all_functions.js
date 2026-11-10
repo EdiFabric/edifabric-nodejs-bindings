@@ -261,9 +261,10 @@ function main() {
         demoLogging('edifabric.log');
 
         try {
-            // Community authorizes with the serial only. Developer can also use ensureToken, Enterprise setToken.
-            ef.setSerial(serial);
-            console.log('  setSerial -> ok');
+            // ensureToken licenses the process on every plan: Community and the demo serial are checked online on
+            // every operation, and Developer, Enterprise and Perpetual get a cached token.
+            ef.ensureToken(serial, 3600);
+            console.log('  ensureToken -> ok');
 
             demoTokenExpiration();
 
