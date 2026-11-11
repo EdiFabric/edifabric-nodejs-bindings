@@ -1,6 +1,6 @@
 {
   "name": "edifabric-x12",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Node.js bindings for ediFabric Native X12: convert X12 EDI to JSON and back, validate, and generate acknowledgments.",
   "main": "edifabric-x12.js",
   "types": "edifabric-x12.d.ts",
