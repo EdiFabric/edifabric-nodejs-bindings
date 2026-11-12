@@ -11,3 +11,7 @@ if (!library.path.includes(expected)) {
 }
 console.log(`loaded ${library.path}`);
 console.log(`getAppVersion -> ${ef.getAppVersion()}`);
+
+// The license check uses OpenSSL on Linux, which loading alone doesn't: a clash with Node's own OpenSSL showed up only here.
+ef.ensureToken(process.env.EDIFABRIC_SERIAL || 'bd96a836feca45cb91c86ee65d281f52', 3600);
+console.log('ensureToken -> ok');
