@@ -158,8 +158,36 @@ const SIGNATURES = [
     'void *get_error(int error_code)',
 ];
 
+// dlopen flags for pinning the library: RTLD_NOW | RTLD_NOLOAD | RTLD_NODELETE.
+const PIN_FLAGS = { linux: 0x2 | 0x4 | 0x1000, darwin: 0x2 | 0x10 | 0x80 };
+const PIN_LIBRARIES = { linux: ['libc.so.6', 'libdl.so.2'], darwin: ['libSystem.B.dylib'] };
+
+/**
+ * Keep the loaded library in memory until the process ends, on Linux and macOS.
+ *
+ * The library is a .NET Native AOT build, which can't be unloaded while its runtime threads run. If it were
+ * unloaded as Node shuts down, one of those threads could run code that is no longer mapped and crash the
+ * process (SIGSEGV) after all the work is done. Opening the already loaded library again with RTLD_NODELETE
+ * marks it never to be unloaded; RTLD_NOLOAD makes sure this doesn't load a second copy. Windows doesn't
+ * need it. Returns whether the library is pinned.
+ */
+function pin(libraryPath) {
+    const flags = PIN_FLAGS[process.platform];
+    if (!flags) return false;
+    for (const name of PIN_LIBRARIES[process.platform]) {
+        try {
+            const dlopen = koffi.load(name).func('void *dlopen(const char *filename, int flags)');
+            if (dlopen(libraryPath, flags)) return true;
+        } catch {
+            // try the next runtime
+        }
+    }
+    return false;
+}
+
 function bind(libraryPath) {
     const lib = koffi.load(libraryPath);
+    pin(libraryPath);
     const raw = {};
     for (const signature of SIGNATURES) {
         const name = /\*?(\w+)\(/.exec(signature)[1];
